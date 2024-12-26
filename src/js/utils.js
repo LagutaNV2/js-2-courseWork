@@ -24,6 +24,26 @@
  * */
 export function calcTileType(index, boardSize) {
   // TODO: ваш код будет тут
+  // Для этого в модуле src/js/utils.js допишите реализацию функции calcTileType так, чтобы она возвращала строки:
+  // top-left,top-right,top,bottom-left,bottom-right,bottom,right,left,center
+
+  const totalCells = boardSize ** 2;
+
+  // Верхний ряд
+  if (index === 0) return 'top-left';
+  if (index === boardSize - 1) return 'top-right';
+  if (index < boardSize) return 'top';
+
+  // Нижний ряд
+  if (index === totalCells - boardSize) return 'bottom-left';
+  if (index === totalCells - 1) return 'bottom-right';
+  if (index >= totalCells - boardSize) return 'bottom';
+
+  // Левый и правый столбцы
+  if (index % boardSize === 0) return 'left';
+  if ((index + 1) % boardSize === 0) return 'right';
+
+  // Все остальные ячейки
   return 'center';
 }
 

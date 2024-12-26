@@ -14,7 +14,7 @@ export default class GamePlay {
     this.loadGameListeners = [];
   }
 
-  bindToDOM(container) {
+  bindToDOM(container) {       // нет ошибки, если app.js нормально выполнил привязку #game-container
     if (!(container instanceof HTMLElement)) {
       throw new Error('container is not HTMLElement');
     }
@@ -50,16 +50,30 @@ export default class GamePlay {
 
     this.boardEl = this.container.querySelector('[data-id=board]');
 
+    // добавляем класс c темамой игры к HTML-элементу игрового поля
     this.boardEl.classList.add(theme);
+
+    // цикл создания ячеек игрового поля
     for (let i = 0; i < this.boardSize ** 2; i += 1) {
       const cellEl = document.createElement('div');
+
+      // Добавляются классы для каждой ячейки:
+      // cell — общий класс для всех ячеек, используемый для базовой стилизации,
+      // map-tile — класс для визуального оформления ячейки как части карты,
+      // map-tile-${calcTileType(i, this.boardSize)} — уникальный класс,
+      //   зависящий от положения ячейки на игровом поле, где calcTileType(i, this.boardSize):
+      //   - это вспомогательная функция, которая определяет тип ячейки (угловая, боковая,
+      //     центральная) на основе индекса i и размера поля.
       cellEl.classList.add('cell', 'map-tile', `map-tile-${calcTileType(i, this.boardSize)}`);
-      cellEl.addEventListener('mouseenter', event => this.onCellEnter(event));
-      cellEl.addEventListener('mouseleave', event => this.onCellLeave(event));
-      cellEl.addEventListener('click', event => this.onCellClick(event));
+
+      cellEl.addEventListener('mouseenter', event => this.onCellEnter(event)); // наведене мыши
+      cellEl.addEventListener('mouseleave', event => this.onCellLeave(event)); // убирание мыши
+      cellEl.addEventListener('click', event => this.onCellClick(event));      // клик
+
       this.boardEl.appendChild(cellEl);
     }
 
+    // После создания всех ячеек их ссылки сохраняются в массив
     this.cells = Array.from(this.boardEl.children);
   }
 
@@ -203,7 +217,7 @@ export default class GamePlay {
   hideCellTooltip(index) {
     this.cells[index].title = '';
   }
-  
+
   showDamage(index, damage) {
     return new Promise((resolve) => {
       const cell = this.cells[index];

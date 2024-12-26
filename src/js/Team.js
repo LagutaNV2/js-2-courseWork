@@ -1,3 +1,5 @@
+import PositionedCharacter from './PositionedCharacter';
+
 /**
  * Класс, представляющий персонажей команды
  *
@@ -13,4 +15,24 @@
  * */
 export default class Team {
   // TODO: write your logic here
+  constructor() {
+    this.characters = [];
+  }
+
+  /**
+   * Добавляет персонажа в команду с указанием позиции
+   * @param {Character} character экземпляр персонажа
+   * @param {number} position позиция на поле
+   */
+  add(character, position) {
+    const positionedCharacter = new PositionedCharacter(character, position);
+    this.characters.push(positionedCharacter);
+  }
+
+  /**
+   * Возвращает список всех персонажей команды
+   */
+  getAll() {
+    return this.characters;
+  }
 }
