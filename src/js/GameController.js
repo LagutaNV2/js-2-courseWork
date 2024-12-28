@@ -12,6 +12,9 @@ import Vampire from './characters/Vampire';
 import Undead from './characters/Undead';
 import Daemon from './characters/Daemon';
 
+// Массив с доступными классами персонажей
+// const allCharacterClasses = [Bowman, Swordsman, Magician, Vampire, Undead, Daemon];
+
 export default class GameController {
   constructor(gamePlay, stateService) {
     this.gamePlay = gamePlay;
@@ -24,42 +27,92 @@ export default class GameController {
     this.occupiedPositions = []; // Занятые позиции
     this.selectedCharacter = null; // Хранит выбранного персонажа
     this.currentThemeIndex = 0;
+    this.currentTurn = 'player';
   }
 
-  /**
-   * Инициализация игры
-   * Устанавливает начальные параметры игры и отображает интерфейс
-   */
   init() {
     console.log('start');
-    this.gamePlay.drawUi(themes.prairie);  // Устанавливаем тему интерфейса
-    this.createTeams();                   // Генерируем команды
-    this.redrawPositions();              // Отображаем персонажей на поле
+
+    this.positions = [];
+    this.occupiedPositions = [];
+    this.selectedCharacter = null;
+    this.currentThemeIndex = 0;
+    this.currentTurn = 'player';
+
+    this.createTeams(2, 2); // Создаём команды
+    this.resetAllCharacters();
+
+    this.gamePlay.drawUi(themes.prairie);
+    this.redrawPositions(); // Отображаем персонажей на поле
     this.addEventListeners();
   }
+
+
+  resetAllCharacters() {
+    this.positions.forEach((positionedCharacter) => {
+      const character = positionedCharacter.character;
+
+      // Сбрасываем свойства для каждого персонажа
+      character.level = 1;
+      character.health = 50;
+
+      switch (character.constructor) {
+        case Bowman:
+          character.attack = 25;
+          character.defence = 25;
+          break;
+        case Swordsman:
+          character.attack = 40;
+          character.defence = 10;
+          break;
+        case Magician:
+          character.attack = 10;
+          character.defence = 40;
+          break;
+        case Vampire:
+          character.attack = 25;
+          character.defence = 25;
+          break;
+        case Undead:
+          character.attack = 40;
+          character.defence = 10;
+          break;
+        case Daemon:
+          character.attack = 10;
+          character.defence = 10;
+          break;
+        default:
+          throw new Error('Unknown character type');
+      }
+    });
+  }
+
 
   /**
    * Генерирует команды игрока и соперника
    */
-  createTeams() {
-    const playerTypes = [Bowman, Swordsman, Magician];
-    const enemyTypes = [Vampire, Undead, Daemon];
-    const maxLevel = 4;
-    const teamSize = 2;
+  createTeams(playerCount, enemyCount) {
+    this.playerTeam = this.placeTeam(
+      generateTeam([Bowman, Swordsman, Magician], 1, playerCount),
+      [0, 1]
+    );
 
-    const playerCharacters = generateTeam(playerTypes, maxLevel, teamSize);
-    const enemyCharacters = generateTeam(enemyTypes, maxLevel, teamSize);
+    this.enemyTeam = this.placeTeam(
+      generateTeam([Vampire, Undead, Daemon], 1, enemyCount),
+      [6, 7]
+    );
 
-    this.playerTeam = this.placeTeam(playerCharacters, [0, 1]); // Столбцы для игроков
-    this.enemyTeam = this.placeTeam(enemyCharacters, [6, 7]); // Столбцы для врагов
-    console.log('this.enemyTeam =', this.enemyTeam);
+    // Обновляем параметры для всех новых персонажей
+    // this.positions.forEach((positionedCharacter) => {
+    //   if (this.playerTeam.includes(positionedCharacter) || this.enemyTeam.includes(positionedCharacter)) {
+    //       this.levelUpCharacter(positionedCharacter.character, this.currentThemeIndex);
+    //   }
+    // });
 
-    // Обновляем занятые позиции после размещения всех персонажей
-    this.updateOccupiedPositions();
-
-    this.positions = [...this.playerTeam, ...this.enemyTeam]; // Объединяем все позиции
+    this.positions = [...this.playerTeam, ...this.enemyTeam];
 
     console.log('this.positions =', this.positions);
+    console.log('this.enemyTeam =', this.enemyTeam);
   }
 
   /**
@@ -77,24 +130,31 @@ export default class GameController {
    * @returns {Array} Массив PositionedCharacter
    */
   placeTeam(characters, columns) {
-    const positionedCharacters = [];
-    const positions = this.generatePositions(columns);
-
-    characters.forEach((character) => {
-      let position;
-      do {
-        position = positions.pop();
-      } while (this.occupiedPositions.includes(position)); // Проверка занятости
-
-        const positionedCharacter = new PositionedCharacter(character, position);
-
-        this.positions.push(positionedCharacter); // Добавляем в общий массив позиций
-        positionedCharacters.push(positionedCharacter);
-        this.updateOccupiedPositions(); // Обновляем занятые позиции
-      });
-
-    return positionedCharacters;
+    return characters.map((character) => {
+      const position = this.getRandomPosition(columns);
+      const positionedCharacter = new PositionedCharacter(character, position);
+      this.positions.push(positionedCharacter);
+      this.updateOccupiedPositions();
+      console.log('Placed character:', positionedCharacter);
+      return positionedCharacter;
+    });
   }
+
+
+  /**
+   * Возвращает случайную доступную позицию.
+   * @param {Array} columns - Столбцы для выбора.
+   * @returns {number} Случайная позиция.
+   */
+  getRandomPosition(columns) {
+    const positions = this.generatePositions(columns);
+    let position;
+    do {
+      position = positions.pop();
+    } while (this.occupiedPositions.includes(position));
+    return position;
+  }
+
 
   /**
    * Генерирует массив доступных позиций на поле
@@ -108,16 +168,39 @@ export default class GameController {
         positions.push(i * this.boardSize + column);
       });
     }
-    return this.shuffleArray(positions);
+    return positions.sort(() => Math.random() - 0.5);
   }
 
-  /**
-   * Перемешивает массив позиций
-   * @param {Array} array - Массив позиций
-   * @returns {Array} Перемешанный массив
-   */
-  shuffleArray(array) {
-    return array.sort(() => Math.random() - 0.5);
+  levelUpCharacter(character, levels = 1) {
+    for (let i = 0; i < levels; i++) {
+      console.log('повышаем:', character.type);
+      console.log(
+        `вх. показатели: 🎖${character.level} ⚔${character.attack} 🛡${character.defence} ❤${character.health}`);
+
+      character.level += 1;
+
+
+      // Повышение показателей атаки/защиты:
+      //    attackAfter = Math.max(attackBefore, attackBefore * (80 + life) / 100)
+      character.attack = Math.max(
+        character.attack,
+        character.attack * (80 + character.health) / 100
+      );
+      character.attack = Math.max(
+            character.attack,
+            Math.round(character.attack * (80 + character.health) / 100)
+        );
+      character.defence = Math.max(
+        character.defence,
+        character.defence * (80 + character.health) / 100
+      );
+
+      // Показатель health приводится к значению: текущий уровень + 80 (но не более 100).
+      character.health = Math.min(100, character.level + 80);
+
+      console.log(`вых. показатели: 🎖${character.level} ⚔${character.attack} 🛡${character.defence} ❤${character.health}`);
+
+    }
   }
 
   /**
@@ -125,35 +208,95 @@ export default class GameController {
    */
   redrawPositions() {
     this.gamePlay.redrawPositions(this.positions);
-
-    // Проверяем окончание игры
+    // this.gamePlay.deselectAllCells(); // Убираем все подсветки
     if (this.checkGameOver()) {
       return;
     }
   }
 
+  checkGameOver() {
+    this.enemyTeam = this.positions.filter((pos) =>
+      this.enemyTeam.some((enemy) => enemy.character === pos.character)
+    );
+
+    this.playerTeam = this.positions.filter((pos) =>
+      this.playerTeam.some((player) => player.character === pos.character)
+    );
+
+    if (this.enemyTeam.length === 0 && this.playerTeam.length > 0) {
+      GamePlay.showMessage('Раунд завершен. Переход на следующий уровень!');
+      // this.levelUpCharacters();
+      this.startNextLevel();
+      return true; // Завершаем текущий процесс
+    }
+    if (this.playerTeam.length === 0) {
+      GamePlay.showMessage('Вы проиграли. Игра окончена!');
+      return true; // Завершаем текущий процесс
+    }
+    return false; // Игра продолжается
+
+  }
+
   levelUpCharacters() {
     this.playerTeam.forEach((positionedCharacter) => {
-      const { character } = positionedCharacter;
-      character.level += 1;
-      character.health = Math.min(100, character.level + 80);
-      character.attack = Math.max(
-        character.attack,
-        character.attack * (80 + character.health) / 100
-      );
-      character.defence = Math.max(
-        character.defence,
-        character.defence * (80 + character.health) / 100
-      );
+      this.levelUpCharacter(positionedCharacter.character);
     });
   }
 
   startNextLevel() {
+    if (this.selectedCharacter) {
+      this.gamePlay.deselectCell(this.selectedCharacter.position);
+      this.selectedCharacter = null;
+    }
+
     this.currentThemeIndex = (this.currentThemeIndex + 1) % Object.keys(themes).length;
     const theme = Object.values(themes)[this.currentThemeIndex];
     this.gamePlay.drawUi(theme);
 
-    this.createTeams();
+    //  Определяем размер команд для текущего уровня
+    const level = this.currentThemeIndex + 1; // Индекс темы начинается с 0, поэтому добавляем 1
+    let playerCount, enemyCount;
+
+    if (level === 2) {
+        playerCount = 3;
+        enemyCount = 3;
+    } else if (level >= 3) {
+        playerCount = 5;
+        enemyCount = 5;
+    } else {
+        playerCount = 2;
+        enemyCount = 2;
+    }
+    // 1. Повышение уровня "живых" персонажей
+    this.playerTeam = this.playerTeam.map((positionedCharacter) => {
+      this.levelUpCharacter(positionedCharacter.character, 1); // Повышаем уровень на 1
+      return positionedCharacter;
+    });
+
+
+
+    // 2. Генерация новых персонажей с уровнем 1
+    const newPlayerCharacters = generateTeam(
+      [Bowman, Swordsman, Magician], 1, playerCount - this.playerTeam.length
+    );
+    const newEnemyCharacters = generateTeam(
+        [Vampire, Undead, Daemon], 1, enemyCount - this.enemyTeam.length
+    );
+
+    // 3. Добавление новых персонажей в команды
+    this.playerTeam = [
+        ...this.playerTeam,
+        ...this.placeTeam(newPlayerCharacters, [0, 1]),
+    ];
+    this.enemyTeam = [
+        ...this.enemyTeam,
+        ...this.placeTeam(newEnemyCharacters, [6, 7]),
+    ];
+
+    this.positions = [...this.playerTeam, ...this.enemyTeam];
+
+    // this.createTeams(playerCount, enemyCount);
+    this.currentTurn = 'player'; // Первый ход за игроком
     this.redrawPositions();
   }
 
@@ -188,8 +331,6 @@ export default class GameController {
 
   /**
    * Логика атаки в классе GameController, с использованием метода showDamage из GamePlay.
-   * Включает расчет урона, обновление здоровья атакованного персонажа и анимацию урона.
-   * После "убийства" персонажа обновляет занятые позиции.
    * @param {*} attacker
    * @param {*} targetPosition
    * @param {string} turn - Текущий ход ('player' или 'enemy').
@@ -200,14 +341,12 @@ export default class GameController {
       throw new Error('Target not found');
     }
 
-    const damage = Math.max(
-      attacker.attack - target.character.defence,
-      attacker.attack * 0.1
-    );
+    const damage = Math.round(
+      Math.max(attacker.attack - target.character.defence, attacker.attack * 0.1) * 10
+    ) / 10;
 
     target.character.health -= damage;
 
-    // Показываем анимацию урона
     await this.gamePlay.showDamage(targetPosition, damage);
 
     if (target.character.health <= 0) {
@@ -215,7 +354,6 @@ export default class GameController {
       this.positions = this.positions.filter((pos) => pos !== target);
       this.updateOccupiedPositions();
 
-      //???
       if (this.isEnemy(target.character)) {
         this.enemyTeam = this.enemyTeam.filter((enemy) => enemy !== target);
       } else {
@@ -237,12 +375,6 @@ export default class GameController {
   async enemyTurn() {
     console.log('Начало хода врага');
 
-    // Проверяем, остались ли враги
-    if (this.enemyTeam.length === 0) {
-      console.log('У противника нет персонажей. Ход пропускается.');
-      return;
-    }
-
     // Находим всех персонажей игрока
     const playerCharacters = this.positions.filter((pos) =>
       this.playerTeam.some((playerPos) => playerPos === pos)
@@ -255,7 +387,7 @@ export default class GameController {
       return;
     }
 
-    // Стратегия: атака самого ближайшего игрока
+    // Стратегия: атака ближайшего игрока
     let bestAttack = null;
 
     // Находим атаку с минимальной дистанцией
@@ -295,8 +427,6 @@ export default class GameController {
       this.redrawPositions();
     }
 
-
-    // Передаём ход игроку
     console.log('Передаём ход игроку');
     this.currentTurn = 'player';
   }
@@ -330,8 +460,6 @@ export default class GameController {
 
       if (attackRange.includes(index) && this.enemyTeam.some((enemy) => enemy.position === index)) {
 
-        // const target = this.positions.find((pos) => pos.position === index);
-        // console.log(`tearget ${target.caracter.type} атакован ${this.selectedCharacter.character.type}`);
         await this.attack(this.selectedCharacter.character, index, 'player');
 
         this.selectedCharacter = null;
@@ -346,9 +474,7 @@ export default class GameController {
         this.moveCharacter(this.selectedCharacter, index);
         this.selectedCharacter = null;
 
-        // Передаём ход врагу
         this.currentTurn = 'enemy';
-        // await this.enemyTurn();
         return;
       }
     }
@@ -383,7 +509,6 @@ export default class GameController {
         this.currentTurn = 'enemy';
         console.log(`Ход передан врагу. Текущий ход: ${this.currentTurn}`);
         await this.enemyTurn();
-
         return;
       }
 
@@ -421,25 +546,16 @@ export default class GameController {
           this.positions = this.positions.filter((pos) => pos !== positionedCharacter);
           console.log('убили', target.type, 'this.positions', this.positions);
           this.updateOccupiedPositions();
-
-          const enemys = this.positions.filter((pos)=>
-              this.enemyTeam.some((enemy)=>enemy.position === pos.position));
-          console.log ('enemys после атаки', enemys);
-          if (enemys.length === 0) {
-            console.log('всех на этом уровне врагов уничтожили, вызываем this.startNextLevel()');
-            this.currentTurn = 'player';
-            this.startNextLevel()
-
+          if (this.checkGameOver()) {
+            return; // Завершаем выполнение, если игра завершена
           }
         }
 
         this.redrawPositions();
 
-        // Переход хода к врагу
         this.currentTurn = 'enemy';
         console.log(`Ход передан врагу. Текущий ход: ${this.currentTurn}`);
         await this.enemyTurn();
-
         return;
       }
 
@@ -521,11 +637,9 @@ export default class GameController {
 
   onCellLeave(index) {
     // console.log(`Уход мыши с клетки с индексом ${index}`);
-    // Реакция на уход мыши (TODO)
-    this.gamePlay.hideCellTooltip(index); // Скрытие подсказки
-    this.gamePlay.deselectCell(index); // Убираем подсветку
+    this.gamePlay.hideCellTooltip(index);
+    this.gamePlay.deselectCell(index);
   }
-
 
   /**
  * Получить допустимые ходы для персонажа
@@ -549,7 +663,6 @@ export default class GameController {
    */
   getAttackRange(character, position) {
     const distance = this.getAttackDistance(character);
-
     return this.getRangeAt(position, distance);
   }
 
@@ -617,7 +730,6 @@ export default class GameController {
     return attackRange;
   }
 
-
   /**
    * Получить дистанцию перемещения для типа персонажа
    * @param {Object} character - Персонаж
@@ -666,22 +778,4 @@ export default class GameController {
   isEnemy(character) {
     return this.enemyTeam.some((pos) => pos.character === character);
   }
-
-  checkGameOver() {
-    if (this.enemyTeam.length === 0) {
-      GamePlay.showMessage('Раунд завершен. Переход на следующий уровень!');
-      this.levelUpCharacters();
-      this.startNextLevel();
-      return true; // Завершаем текущий процесс
-    }
-
-    if (this.playerTeam.length === 0) {
-      GamePlay.showMessage('Вы проиграли. Игра окончена!');
-      return true; // Завершаем текущий процесс
-    }
-
-    return false; // Игра продолжается
-  }
-
-
 }
