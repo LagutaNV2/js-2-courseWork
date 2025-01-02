@@ -30,6 +30,10 @@ body {
 .controls {
   text-align: center;
   margin: 50px 0;
+
+  /* добавлено */
+  position: relative;
+  margin-bottom: 20px;
 }
 
 .board-container {
@@ -251,4 +255,23 @@ body {
     top: -20px;
     font-size: 1.5rem;
   }
+}
+
+/* счетчики */
+.score-board {
+  position: fixed;
+  max-width: 400px; /* Максимальная ширина */
+  bottom: 10px; /* Отступ от нижнего края */
+  padding: 10px 20px; /* Внутренние отступы */
+  margin: 20px auto; /* Отступы сверху и центрирование */
+  left: 50%; /* Центрирование */
+  text-align: center; /* Выравнивание текста */
+  background-color: #333333; /* Фоновый цвет */
+  border: 2px solid #ffffff; /* Граница */
+  border-radius: 8px; /* Скругление углов */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Тень */
+  transform: translateX(-50%);
+  z-index: 100; /* Поверх других элементов */
+  font-size: 1.2rem; /* Размер текста */
+  color: #ffffff; /* Цвет текста */
 }

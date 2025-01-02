@@ -4,7 +4,11 @@ export default class GameStateService {
   }
 
   save(state) {
-    this.storage.setItem('state', JSON.stringify(state));
+    const savedState = {
+      ...state,
+      maxScore: state.maxScore || 0,
+    };
+    this.storage.setItem('state', JSON.stringify(savedState));
   }
 
   load() {

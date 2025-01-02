@@ -41,8 +41,11 @@ export default class GamePlay {
     `;
 
     this.newGameEl = this.container.querySelector('[data-id=action-restart]');
+    // this.newGameEl = document.querySelector('[data-id="action-restart"]');
     this.saveGameEl = this.container.querySelector('[data-id=action-save]');
     this.loadGameEl = this.container.querySelector('[data-id=action-load]');
+
+    // console.log('this.newGameEl, this.saveGameEl, this.loadGameEl:', this.newGameEl, this.saveGameEl, this.loadGameEl);
 
     this.newGameEl.addEventListener('click', event => this.onNewGameClick(event));
     this.saveGameEl.addEventListener('click', event => this.onSaveGameClick(event));
@@ -138,6 +141,7 @@ export default class GamePlay {
    * @param callback
    */
   addNewGameListener(callback) {
+    console.log("Adding new game listener...");
     this.newGameListeners.push(callback);
   }
 
@@ -147,6 +151,7 @@ export default class GamePlay {
    * @param callback
    */
   addSaveGameListener(callback) {
+    console.log("Adding save game listener...");
     this.saveGameListeners.push(callback);
   }
 
@@ -156,6 +161,7 @@ export default class GamePlay {
    * @param callback
    */
   addLoadGameListener(callback) {
+    console.log("Adding load game listener...");
     this.loadGameListeners.push(callback);
   }
 
@@ -219,6 +225,10 @@ export default class GamePlay {
   }
 
   showDamage(index, damage) {
+    if (typeof index !== 'number' || index < 0 || index >= this.boardSize ** 2) {
+      console.error(`Некорректный индекс для showDamage: ${index}`);
+    };
+
     return new Promise((resolve) => {
       const cell = this.cells[index];
       const damageEl = document.createElement('span');
