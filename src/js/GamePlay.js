@@ -225,9 +225,9 @@ export default class GamePlay {
   }
 
   showDamage(index, damage) {
-    if (typeof index !== 'number' || index < 0 || index >= this.boardSize ** 2) {
-      console.error(`Некорректный индекс для showDamage: ${index}`);
-    };
+    // if (typeof index !== 'number' || index < 0 || index >= this.boardSize ** 2) {
+    //   console.error(`Некорректный индекс для showDamage: ${index}`);
+    // };
 
     return new Promise((resolve) => {
       const cell = this.cells[index];

@@ -44,23 +44,111 @@ export default class GameController {
     this.scoresReset = false;
   }
 
-  init() {
-    console.log('start');
+  // init() {
+  //   console.log('start');
 
+  //   this.positions = [];
+  //   this.occupiedPositions = [];
+  //   this.selectedCharacter = null;
+  //   this.currentThemeIndex = 0;
+  //   this.currentTurn = 'player';
+
+  //   this.createTeams(2, 2);
+  //   this.resetAllCharacters();
+
+  //   console.log('stateService:', this.stateService);
+  //   const savedState = this.stateService.load();
+  //   this.maxScore = savedState?.maxScore || 0; // Загружаем рекорд из сохранений
+  //   console.log(`Максимальный счёт после загрузки: ${this.maxScore}`);
+
+  //   // Сохраняем .score-board, если он существует
+  //   const scoreBoard = document.querySelector('.score-board');
+  //   let scoreBoardContent = '';
+  //   if (scoreBoard) {
+  //     scoreBoardContent = scoreBoard.outerHTML;
+  //     scoreBoard.remove();
+  //   }
+
+  //   this.gamePlay.drawUi(themes.prairie);
+  //   // Восстанавливаем .score-board
+  //   if (scoreBoardContent) {
+  //     this.gamePlay.container.insertAdjacentHTML('beforeend', scoreBoardContent);
+  //   }
+
+  //   this.redrawPositions(); // Отображаем персонажей на поле
+  //   this.addEventListeners();
+  //   this.addButtonListeners();
+
+  //   console.log('Вызов updateScoreDisplay из init');
+  //   this.updateScoreDisplay(); // Отображаем начальный счёт
+  // }
+
+
+  // initNewGame() {
+  //   this.resetScores();
+
+  //   this.positions = [];
+  //   this.occupiedPositions = [];
+  //   this.selectedCharacter = null;
+  //   this.currentThemeIndex = 0;
+  //   this.currentTurn = 'player';
+
+  //   // Сбрасываем команды и создаем новую игру
+  //   this.playerTeam = [];
+  //   this.enemyTeam = [];
+  //   this.createTeams(2, 2);
+
+  //   console.log('stateService:', this.stateService);
+  //   const savedState = this.stateService.load();
+  //   this.maxScore = savedState?.maxScore || 0; // Загружаем рекорд из сохранений
+  //   console.log(`Максимальный счёт после загрузки: ${this.maxScore}`);
+
+  //   this.gamePlay.drawUi(themes.prairie);
+  //   this.redrawPositions();
+  //   this.addEventListeners();
+  //   this.addButtonListeners();
+  //   // this.isGameOver = false;
+
+  //   GamePlay.showMessage('Новая игра началась!');
+  //   this.updateScoreDisplay();
+  // }
+
+  _initializeGame(isNewGame = false) {
     this.positions = [];
     this.occupiedPositions = [];
     this.selectedCharacter = null;
     this.currentThemeIndex = 0;
     this.currentTurn = 'player';
+    this.isGameOver = false;
 
+    this.currentScore = 0;
+
+    if (isNewGame) {
+      this.resetCurrentScore();
+    } else {
+      localStorage.clear();
+    }
+
+    this.playerTeam = [];
+    this.enemyTeam = [];
     this.createTeams(2, 2);
     this.resetAllCharacters();
 
-    const savedState = this.stateService.load();
+    console.log('stateService:', this.stateService);
+
+    let savedState;
+    try {
+      savedState = this.stateService.load();
+    } catch (error) {
+      console.error('Ошибка загрузки состояния:', error);
+      savedState = null;
+    }
+
+    console.log('Состояние после загрузки:', savedState);
+
     this.maxScore = savedState?.maxScore || 0; // Загружаем рекорд из сохранений
     console.log(`Максимальный счёт после загрузки: ${this.maxScore}`);
 
-    // Сохраняем .score-board, если он существует
     const scoreBoard = document.querySelector('.score-board');
     let scoreBoardContent = '';
     if (scoreBoard) {
@@ -68,43 +156,54 @@ export default class GameController {
       scoreBoard.remove();
     }
 
+    console.log('Создание новой игры...');
+
     this.gamePlay.drawUi(themes.prairie);
-    // Восстанавливаем .score-board
     if (scoreBoardContent) {
       this.gamePlay.container.insertAdjacentHTML('beforeend', scoreBoardContent);
     }
 
-    this.redrawPositions(); // Отображаем персонажей на поле
-    this.addEventListeners();
-    this.addButtonListeners();
-
-    console.log('Вызов updateScoreDisplay из init');
-    this.updateScoreDisplay(); // Отображаем начальный счёт
-  }
-
-  initNewGame() {
-    this.resetScores();
-
-    this.positions = [];
-    this.occupiedPositions = [];
-    this.selectedCharacter = null;
-    this.currentThemeIndex = 0;
-    this.currentTurn = 'player';
-
-    // Сбрасываем команды и создаем новую игру
-    this.playerTeam = [];
-    this.enemyTeam = [];
-    this.createTeams(2, 2);
-
-    this.gamePlay.drawUi(themes.prairie);
     this.redrawPositions();
     this.addEventListeners();
     this.addButtonListeners();
-    // this.isGameOver = false;
-
-    GamePlay.showMessage('Новая игра началась!');
     this.updateScoreDisplay();
-}
+  }
+
+  init() {
+    console.log('start');
+    this._initializeGame(false); // false - это не новая игра
+  }
+
+  initNewGame() {
+    GamePlay.showMessage('Новая игра началась!');
+    this._initializeGame(true); // true - это новая игра
+  }
+
+  // init() {
+  //   console.log('start');
+  //   localStorage.clear();
+
+  //   this.resetCurrentScore();
+  //   const savedState = this.stateService.load() || {};
+  //   this.maxScore = savedState.maxScore || 0; // Загрузка рекорда
+
+  //   this.positions = [];
+  //   this.occupiedPositions = [];
+  //   this.selectedCharacter = null;
+  //   this.currentThemeIndex = 0;
+  //   this.currentTurn = 'player';
+  //   this.playerTeam = [];
+  //   this.enemyTeam = [];
+  //   this.createTeams(2, 2);
+  //   this.resetAllCharacters();
+
+  //   this.gamePlay.drawUi(themes.prairie);
+  //   this.redrawPositions();
+  //   this.addEventListeners();
+  //   this.addButtonListeners();
+
+  //   this.updateScoreDisplay();
+  // }
 
   resetAllCharacters() {
     this.positions.forEach((positionedCharacter) => {
@@ -158,13 +257,6 @@ export default class GameController {
       generateTeam([Vampire, Undead, Daemon], 1, enemyCount),
       [6, 7]
     );
-
-    // Обновляем параметры для всех новых персонажей
-    // this.positions.forEach((positionedCharacter) => {
-    //   if (this.playerTeam.includes(positionedCharacter) || this.enemyTeam.includes(positionedCharacter)) {
-    //       this.levelUpCharacter(positionedCharacter.character, this.currentThemeIndex);
-    //   }
-    // });
 
     this.positions = [...this.playerTeam, ...this.enemyTeam];
 
@@ -297,20 +389,18 @@ export default class GameController {
             console.log(`Новый рекорд! Старый рекорд: ${this.maxScore}, новый: ${this.currentScore}`);
             this.maxScore = this.currentScore;
           }
+
           this.updateCurrentScore(); // Финальный пересчёт очков
+          this.updateMaxScore(); // Обновление рекорда
           this.updateScoreDisplay();
           GamePlay.showMessage('Поздравляем! Вы завершили все уровни!');
           this.blockGameField();
           this.isGameOver = true;
           return true;
         }
-        if (this.currentThemeIndex < 3) {
-          console.log('Раунд завершён, обновляем текущий счёт');
-          this.updateCurrentScore(); // Обновляем текущий счёт
-          this.updateScoreDisplay();
-        }
-
-        GamePlay.showMessage('Раунд завершен. Переход на следующий уровень!');
+        GamePlay.showMessage('Раунд завершен, обновляем текущий счёт. Переход на следующий уровень!');
+        this.updateCurrentScore();
+        this.updateScoreDisplay();
         this.startNextLevel();
         return true;
     }
@@ -322,7 +412,7 @@ export default class GameController {
       this.isGameOver = true;
       return true;
     }
-    return false; // Игра продолжается
+    return false; // раунд продолжается, игра не завершена
 
   }
 
@@ -356,35 +446,53 @@ export default class GameController {
     console.log(`Обновлённый текущий счёт: ${this.currentScore}`);
   }
 
-  updateScoreDisplay() {
-    console.log('Вызов updateScoreDisplay');
-    console.log(`Текущий счёт: ${this.currentScore}, Рекорд: ${this.maxScore}`);
-
-    let scoreBoard = document.querySelector('.score-board');
-    if (scoreBoard) {
-      console.log('Элемент .score-board найден, обновляем текст.');
-      scoreBoard.textContent = `Рекорд: ${this.maxScore}, текущий счёт: ${this.currentScore}`;
-    } else {
-      console.log('Элемент .score-board не найден, создаём новый.');
-      const scoreElement = document.createElement('div');
-      scoreElement.classList.add('score-board');
-      scoreElement.textContent = `Рекорд: ${this.maxScore}, текущий счёт: ${this.currentScore}`;
-      this.gamePlay.container.appendChild(scoreElement);
+  updateMaxScore() {
+    if (this.currentScore > this.maxScore) {
+      console.log(`Обновление рекорда: старый ${this.maxScore}, новый ${this.currentScore}`);
+      this.maxScore = this.currentScore;
+      this.saveMaxScore();
     }
   }
 
-  resetScores() {
+  saveMaxScore() {
+    const savedState = this.stateService.load() || {};
+    savedState.maxScore = this.maxScore;
+    this.stateService.save(savedState);
+  }
+
+  resetCurrentScore() {
+    this.currentScore = 0;
     if (!this.scoresReset) { // Проверка, сбрасывались ли счётчики ранее
       console.log('Попытка сбросить счётчики...');
-      if (confirm('Вы хотите сбросить рекорд и начать новую игру?')) {
+      if (confirm('Вы хотите сбросить рекорд?')) {
         this.maxScore = 0; // Сброс рекорда
-        this.currentScore = 0; // Сброс текущего счёта
+        localStorage.clear(); // Очистка localStorage
+        // this.currentScore = 0; // Сброс текущего счёта
         this.scoresReset = true; // Устанавливаем флаг
         console.log('Счётчики успешно сброшены.');
         this.updateScoreDisplay(); // Обновляем отображение
       } else {
         console.log('Сброс счётчиков отменён.');
       }
+    }
+  }
+
+  updateScoreDisplay() {
+    console.log('Вызов updateScoreDisplay');
+
+    if (!this.gamePlay.container) {
+      console.error('gamePlay.container is not defined.');
+      return;
+    }
+
+    let scoreElement = document.querySelector('.score-board');
+    if (!scoreElement) {
+      scoreElement = document.createElement('div');
+      scoreElement.classList.add('score-board');
+      scoreElement.textContent = `Рекорд: ${this.maxScore}, текущий счёт: ${this.currentScore}`;
+      this.gamePlay.container.appendChild(scoreElement);
+    } else {
+      scoreElement.textContent = `Рекорд: ${this.maxScore}, текущий счёт: ${this.currentScore}`;
     }
   }
 
@@ -460,8 +568,7 @@ export default class GameController {
       [Bowman, Swordsman, Magician], 1, playerCount - this.playerTeam.length
     );
     const newEnemyCharacters = generateTeam(
-        [Vampire, Undead, Daemon], 1, enemyCount - this.enemyTeam.length
-    );
+        [Vampire, Undead, Daemon], 1, enemyCount);
 
     // 3. Добавление новых персонажей в команды
     this.playerTeam = [
@@ -576,6 +683,7 @@ export default class GameController {
 
     if (playerCharacters.length === 0) {
       GamePlay.showMessage('Все персонажи игрока уничтожены. Вы проиграли.');
+      this.isGameOver = true;
       return;
     }
 
@@ -596,12 +704,7 @@ export default class GameController {
 
     if (bestAttack) {
       console.log(`async enemyTurn Враг атакует ${bestAttack.enemy.character.type} на позиции ${bestAttack.enemy.position} атакует игрока ${bestAttack.target.character.type} на позиции ${bestAttack.target.position}`);
-      console.log(`async enemyTurn до атаки 🎖${bestAttack.target.character.level} ⚔${bestAttack.target.character.attack} 🛡${bestAttack.target.character.defence} ❤${bestAttack.target.character.health}`);
-
       await this.attack(bestAttack.enemy.character, bestAttack.target.position, 'enemy');
-
-      console.log(`async enemyTurn после атаки 🎖${bestAttack.target.character.level} ⚔${bestAttack.target.character.attack} 🛡${bestAttack.target.character.defence} ❤${bestAttack.target.character.health}`);
-
       return;
     //}
     } else {
@@ -682,6 +785,11 @@ export default class GameController {
   }
 
   onCellClick = async (index) => {
+    if (this.isGameOver) {
+      console.log('onCellClick: Игра завершена, действия заблокированы.');
+      return;
+    }
+
     console.log(`onCellClick Клик по клетке с индексом ${index}`);
     const positionedCharacter = this.positions.find((pos) => pos.position === index);
 
@@ -752,9 +860,9 @@ export default class GameController {
             this.playerTeam = this.playerTeam.filter((player) => player !== target);
           }
 
-          // if (this.checkGameOver()) {
-          //   return; // Завершаем выполнение, если игра завершена
-          // }
+          if (this.checkGameOver()) {
+            return; // Завершаем выполнение, если игра завершена
+          }
           console.log('onCellClick До вызова redrawPositions');
           this.redrawPositions();
           console.log('onCellClick После вызова redrawPositions');
@@ -803,6 +911,10 @@ export default class GameController {
   }
 
   onCellEnter(index) {
+    if (this.isGameOver) {
+      console.log('onCellClick: Игра завершена, действия заблокированы.');
+      return;
+    }
     // console.log(`Наведение мыши на клетку с индексом ${index}`);
     const positionedCharacter = this.positions.find((pos) => pos.position === index);
     const { selectedCharacter } = this;
@@ -872,9 +984,18 @@ export default class GameController {
 
   onNewGameClick() {
     console.log('-------нажата кнопка NewGame------');
-    const currentScore = this.calculateCurrentScore();
-    this.trackMaxScore(currentScore);
+    this.resetCurrentScore();
+    // const currentScore = this.calculateCurrentScore();
+    // this.trackMaxScore(currentScore);
+    const container = document.getElementById('game-container');
+
+    const newGamePlay = new GamePlay();
+    newGamePlay.bindToDOM(container);
+
+    this.gamePlay = newGamePlay;
+    // this._initializeGame(true);
     this.initNewGame();
+    // this.init();
   };
 
   onSaveGameClick() {
@@ -939,6 +1060,14 @@ export default class GameController {
 
         console.log('Загруженные позиции:', this.positions);
 
+        this.currentScore = loadState.currentScore || 0;
+        // this.currentScore = loadState.userStats || 0;
+        this.maxScore = loadState.maxScore || this.maxScore;
+        // this.maxScore = Math.max(this.maxScore, loadState.maxScore || 0);
+        console.log('Текущий счёт после загрузки:', this.currentScore);
+        console.log('loadState.userStats', loadState.userStats);
+        console.log('Максимальный счёт после загрузки:', this.maxScore);
+
         // Обновление команд
         this.playerTeam = this.positions.filter((pos) =>
             ['bowman', 'swordsman', 'magician'].includes(pos.character.type)
@@ -951,11 +1080,19 @@ export default class GameController {
         console.log('Команда врага после загрузки:', this.enemyTeam);
 
         // Восстановление темы через levelToThemeMap
-        const levelToThemeMap = ['prairie', 'desert', 'arctic', 'mountain'];
-        const themeKey = levelToThemeMap[this.gameState.level - 1]; // Индекс = уровень - 1
-        const theme = themes[themeKey];
+        // const levelToThemeMap = ['prairie', 'desert', 'arctic', 'mountain'];
+        // const themeKey = levelToThemeMap[this.gameState.level - 1]; // Индекс = уровень - 1
+        // const theme = themes[themeKey];
+        // if (!theme) {
+        //     throw new Error(`Тема для уровня ${this.gameState.level} (${themeKey}) не найдена`);
+        // }
+
+        // Восстанавливаем текущий уровень и индекс темы
+        this.currentThemeIndex = (loadState.level || 1) - 1; // Приводим уровень к индексу темы
+        const theme = Object.values(themes)[this.currentThemeIndex];
+
         if (!theme) {
-            throw new Error(`Тема для уровня ${this.gameState.level} (${themeKey}) не найдена`);
+          throw new Error(`Тема для уровня ${loadState.level} не найдена`);
         }
         console.log('Тема после загрузки:', theme);
         console.log('Уровень после загрузки:', this.gameState.level);

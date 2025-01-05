@@ -49,5 +49,6 @@ module.exports = {
   devServer: {
     static: './dist',
     hot: true,
+    liveReload: true,
   },
 };
