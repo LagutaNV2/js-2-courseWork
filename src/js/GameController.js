@@ -68,7 +68,7 @@ export default class GameController {
     console.log('Состояние после загрузки:', savedState);
 
     try {
-      this.maxScore = savedState?.maxScore
+      this.maxScore = savedState.maxScore;
     } catch (error) {
       console.error('Ошибка загрузки рекорда:', error);
       this.maxScore = 0;
@@ -353,7 +353,7 @@ export default class GameController {
 
   updateCurrentScore() {
     console.log('Пересчёт текущего счёта');
-    console.log('Команда игрока:', this.playerTeam);
+    console.log('Команда игрока:', this.playerTeam, '!! selectedCharacter??', this.selectedCharacter);
     this.currentScore = this.playerTeam.reduce(
       (acc, positionedCharacter) => acc + Math.round(positionedCharacter.character.health),
       0
@@ -640,6 +640,7 @@ export default class GameController {
       // } else {
         this.playerTeam = this.playerTeam.filter((player) => player !== target);
       // }
+      this.selectedCharacter = null;
     }
 
     console.log('async attack До вызова redrawPositions');
@@ -687,7 +688,7 @@ export default class GameController {
     }
 
     if (bestAttack) {
-      console.log(`async enemyTurn Враг атакует ${bestAttack.enemy.character.type} на позиции ${bestAttack.enemy.position} атакует игрока ${bestAttack.target.character.type} на позиции ${bestAttack.target.position}`);
+      console.log(`async enemyTurn Враг атакует: ${bestAttack.enemy.character.type} на позиции ${bestAttack.enemy.position} атакует игрока ${bestAttack.target.character.type} на позиции ${bestAttack.target.position}`);
       await this.attack(bestAttack.enemy.character, bestAttack.target.position, 'enemy');
       return;
     //}
@@ -707,56 +708,6 @@ export default class GameController {
 
     console.log('--> async enemyTurn --> Передаём ход игроку');
     this.currentTurn = 'player';
-  }
-
-  /**
- * Логика хода игрока
- */
-  async playerTurn(index) {
-    console.log('Начало хода игрока');
-    if (this.currentTurn !== 'player') {
-      GamePlay.showError('Сейчас ходит враг!');
-      return;
-    }
-
-    const positionedCharacter = this.positions.find((pos) => pos.position === index);
-
-    // Если выбран персонаж игрока
-    if (positionedCharacter && this.playerTeam.some((player) => player.position === index)) {
-      if (this.selectedCharacter) {
-        this.gamePlay.deselectCell(this.selectedCharacter.position);
-      }
-      this.selectedCharacter = positionedCharacter;
-      this.gamePlay.selectCell(index, 'yellow');
-      return;
-    }
-
-    // Если атакуем врага
-    if (this.selectedCharacter) {
-      const attackRange = this.getAttackRange(this.selectedCharacter.character, this.selectedCharacter.position);
-
-      if (attackRange.includes(index) && this.enemyTeam.some((enemy) => enemy.position === index)) {
-
-        await this.attack(this.selectedCharacter.character, index, 'player');
-
-        this.selectedCharacter = null;
-
-        return;
-      }
-
-      // Если перемещаемся
-      const moveRange = this.getMoveRange(this.selectedCharacter.character, this.selectedCharacter.position);
-
-      if (moveRange.includes(index) && !this.occupiedPositions.includes(index)) {
-        this.moveCharacter(this.selectedCharacter, index);
-        this.selectedCharacter = null;
-
-        this.currentTurn = 'enemy';
-        return;
-      }
-    }
-
-    GamePlay.showError('Невозможно выполнить действие.');
   }
 
   /**
@@ -838,18 +789,19 @@ export default class GameController {
           console.log('onCellClick убили', target.type, 'this.positions', this.positions);
           this.updateOccupiedPositions();
 
-          if (this.isEnemy(target.character)) {
+          //if (this.isEnemy(target.character)) {
             this.enemyTeam = this.enemyTeam.filter((enemy) => enemy !== target);
-          } else {
+          //} else {
             this.playerTeam = this.playerTeam.filter((player) => player !== target);
-          }
+          //}
 
-          if (this.checkGameOver()) {
-            return; // Завершаем выполнение, если игра завершена
-          }
+          // if (this.checkGameOver()) {
+          //   return; // Завершаем выполнение, если игра завершена
+          // }
           console.log('onCellClick До вызова redrawPositions');
           this.redrawPositions();
           console.log('onCellClick После вызова redrawPositions');
+          this.checkGameOver()
           return;
         }
 

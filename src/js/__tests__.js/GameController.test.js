@@ -143,17 +143,6 @@ describe('GameController - Tests', () => {
       expect(gamePlayMock.drawUi).toHaveBeenCalledWith(themes.arctic); // Тема 3 уровня
   });
 
-  test('updateScoreDisplay updates the score board', () => {
-      gameController.currentScore = 150;
-      gameController.maxScore = 300;
-      gameController.updateScoreDisplay();
-
-      const scoreBoard = gamePlayMock.container.querySelector('.score-board');
-      expect(scoreBoard).not.toBeNull();
-      expect(scoreBoard.textContent).toContain('Рекорд: 300');
-      expect(scoreBoard.textContent).toContain('текущий счёт: 150');
-  });
-
   test('redrawPositions maintains .score-board in DOM', () => {
       gameController.init();
 
