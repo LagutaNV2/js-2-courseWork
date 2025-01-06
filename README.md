@@ -1,5 +1,6 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/cs5iq27n5t2rmw17?svg=true)](https://ci.appveyor.com/project/LagutaNV2/js-2-coursework)
 
+https://lagutanv2.github.io/js-2-courseWork/
 
 # Дипломное задание к курсу «Продвинутый JavaScript». Retro Game
 
